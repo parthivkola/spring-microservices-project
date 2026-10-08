@@ -1,0 +1,65 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+
+    <parent>
+        <groupId>com.microservices</groupId>
+        <artifactId>microservices-project</artifactId>
+        <version>1.0-SNAPSHOT</version>
+    </parent>
+
+    <artifactId>inventory-service</artifactId>
+
+    <dependencies>
+        <!-- Servlet-based REST service — exposes GET /api/inventory/{productId} -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-web</artifactId>
+        </dependency>
+
+        <!-- Registers with Eureka so the gateway / other services can discover it -->
+        <dependency>
+            <groupId>org.springframework.cloud</groupId>
+            <artifactId>spring-cloud-starter-netflix-eureka-client</artifactId>
+        </dependency>
+
+        <!--
+            Spring Kafka — consumer for OrderCreatedEvent on topic "order-events".
+            Provides @KafkaListener, JsonDeserializer, ConcurrentKafkaListenerContainerFactory.
+            Version is managed by Spring Boot BOM — no explicit version needed.
+        -->
+        <dependency>
+            <groupId>org.springframework.kafka</groupId>
+            <artifactId>spring-kafka</artifactId>
+        </dependency>
+
+        <!--
+            Redis (Lettuce client) — fast key-value store for inventory counters.
+            StringRedisTemplate gives us DECRBY / GET / SET on inventory:{productId} keys.
+            Start Redis: docker run -d -p 6379:6379 redis:alpine
+        -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-data-redis</artifactId>
+        </dependency>
+
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-actuator</artifactId>
+        </dependency>
+
+        <!--
+            springdoc-openapi — auto-generates Swagger UI from controller annotations.
+            Swagger UI: http://localhost:8085/swagger-ui.html
+            OpenAPI JSON: http://localhost:8085/v3/api-docs
+        -->
+        <dependency>
+            <groupId>org.springdoc</groupId>
+            <artifactId>springdoc-openapi-starter-webmvc-ui</artifactId>
+            <version>2.6.0</version>
+        </dependency>
+    </dependencies>
+
+</project>

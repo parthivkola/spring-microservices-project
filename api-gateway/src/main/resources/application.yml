@@ -1,0 +1,147 @@
+server:
+  port: 8080
+
+spring:
+  application:
+    name: api-gateway
+
+  data:
+    redis:
+      host: ${REDIS_HOST:localhost}
+      port: ${REDIS_PORT:6379}
+
+  cloud:
+    gateway:
+      discovery:
+        locator:
+          enabled: false
+
+      routes:
+        # Auth (login/register) — public; JWT filter skips /api/auth/**
+        - id: auth-service-route
+          uri: lb://user-service
+          predicates:
+            - Path=/api/auth/**
+          filters:
+            - name: RequestRateLimiter
+              args:
+                redis-rate-limiter.replenishRate: 5
+                redis-rate-limiter.burstCapacity: 10
+                redis-rate-limiter.requestedTokens: 1
+                key-resolver: "#{@ipKeyResolver}"
+
+        - id: user-service-route
+          uri: lb://user-service
+          predicates:
+            - Path=/api/users/**
+          filters:
+            - name: RequestRateLimiter
+              args:
+                redis-rate-limiter.replenishRate: 10
+                redis-rate-limiter.burstCapacity: 20
+                redis-rate-limiter.requestedTokens: 1
+                key-resolver: "#{@ipKeyResolver}"
+
+        - id: order-service-route
+          uri: lb://order-service
+          predicates:
+            - Path=/api/orders/**
+          filters:
+            - name: RequestRateLimiter
+              args:
+                redis-rate-limiter.replenishRate: 5
+                redis-rate-limiter.burstCapacity: 10
+                redis-rate-limiter.requestedTokens: 1
+                key-resolver: "#{@ipKeyResolver}"
+
+        - id: product-service-route
+          uri: lb://product-service
+          predicates:
+            - Path=/api/products/**
+          filters:
+            - name: RequestRateLimiter
+              args:
+                redis-rate-limiter.replenishRate: 10
+                redis-rate-limiter.burstCapacity: 20
+                redis-rate-limiter.requestedTokens: 1
+                key-resolver: "#{@ipKeyResolver}"
+
+        - id: inventory-service-route
+          uri: lb://inventory-service
+          predicates:
+            - Path=/api/inventory/**
+          filters:
+            - name: RequestRateLimiter
+              args:
+                redis-rate-limiter.replenishRate: 10
+                redis-rate-limiter.burstCapacity: 20
+                redis-rate-limiter.requestedTokens: 1
+                key-resolver: "#{@ipKeyResolver}"
+
+        - id: notification-service-route
+          uri: lb://notification-service
+          predicates:
+            - Path=/api/notifications/**
+          filters:
+            - name: RequestRateLimiter
+              args:
+                redis-rate-limiter.replenishRate: 10
+                redis-rate-limiter.burstCapacity: 20
+                redis-rate-limiter.requestedTokens: 1
+                key-resolver: "#{@ipKeyResolver}"
+
+        - id: analytics-service-route
+          uri: lb://analytics-service
+          predicates:
+            - Path=/api/analytics/**
+          filters:
+            - name: RequestRateLimiter
+              args:
+                redis-rate-limiter.replenishRate: 10
+                redis-rate-limiter.burstCapacity: 20
+                redis-rate-limiter.requestedTokens: 1
+                key-resolver: "#{@ipKeyResolver}"
+
+# Must match user-service app.jwt.secret
+app:
+  jwt:
+    secret: ${JWT_SECRET:microservices-jwt-secret-key-32chars-min!!}
+
+# ============================================================
+# EUREKA CLIENT
+# - fetch-registry: true  → gateway downloads service list so lb:// works
+# - register-with-eureka: true → gateway itself appears in Eureka dashboard
+# ============================================================
+eureka:
+  client:
+    service-url:
+      defaultZone: ${EUREKA_CLIENT_SERVICE_URL_DEFAULTZONE:http://localhost:8761/eureka/}
+    fetch-registry: true
+    register-with-eureka: true
+  instance:
+    prefer-ip-address: true
+
+# ============================================================
+# ACTUATOR ENDPOINTS
+# GET /actuator/gateway/routes  → see all active routes at runtime
+# GET /actuator/gateway/filters → see all registered filters
+# GET /actuator/health          → gateway health status
+# ============================================================
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health, info, gateway
+  endpoint:
+    gateway:
+      enabled: true
+
+# ============================================================
+# LOGGING
+# Set to DEBUG during development to see route matching decisions.
+# Drop to INFO in production.
+# ============================================================
+logging:
+  level:
+    org.springframework.cloud.gateway: DEBUG
+    com.microservices.gateway: DEBUG

@@ -1,0 +1,24 @@
+server:
+  port: 8888
+
+spring:
+  application:
+    name: config-server
+  profiles:
+    # "native" activates the local-filesystem backend.
+    # Without this, Config Server defaults to Git and will fail to start.
+    active: native
+  cloud:
+    config:
+      server:
+        native:
+          # Local: mvn spring-boot:run from config-server/ → ../config-repo
+          # Docker: set CONFIG_REPO=file:/config-repo and mount ./config-repo
+          search-locations: ${CONFIG_REPO:file:${user.dir}/../config-repo}
+
+eureka:
+  client:
+    service-url:
+      defaultZone: ${EUREKA_CLIENT_SERVICE_URL_DEFAULTZONE:http://localhost:8761/eureka/}
+  instance:
+    prefer-ip-address: true

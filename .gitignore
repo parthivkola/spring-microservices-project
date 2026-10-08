@@ -1,0 +1,48 @@
+# Build
+**/target/
+*.class
+*.jar
+*.war
+*.ear
+
+# IDE
+.idea/
+*.iml
+*.ipr
+*.iws
+.vscode/
+*.swp
+*~
+.project
+.classpath
+.settings/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Env / secrets
+.env
+.env.*
+!.env.example
+*.pem
+*.p12
+*.jks
+
+# Logs
+*.log
+logs/
+
+# Maven
+.mvn/wrapper/maven-wrapper.jar
+pom.xml.tag
+pom.xml.releaseBackup
+pom.xml.versionsBackup
+release.properties
+
+# Misc
+*.orig
+*.bak
+
+# Local smoke-test logs / runtime
+.run-logs/

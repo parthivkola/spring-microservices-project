@@ -1,0 +1,104 @@
+server:
+  port: 8082
+
+spring:
+  application:
+    name: order-service
+
+  data:
+    redis:
+      host: ${REDIS_HOST:localhost}
+      port: ${REDIS_PORT:6379}
+
+  kafka:
+    bootstrap-servers: ${KAFKA_BOOTSTRAP:localhost:9092}
+    producer:
+      key-serializer: org.apache.kafka.common.serialization.StringSerializer
+      value-serializer: org.springframework.kafka.support.serializer.JsonSerializer
+      properties:
+        spring.json.add.type.headers: false
+
+eureka:
+  client:
+    service-url:
+      defaultZone: ${EUREKA_URL:http://localhost:8761/eureka/}
+    fetch-registry: true
+    register-with-eureka: true
+  instance:
+    prefer-ip-address: true
+
+spring.cloud.openfeign:
+  client:
+    config:
+      default:
+        logger-level: BASIC
+
+resilience4j:
+  circuitbreaker:
+    instances:
+      product-service:
+        sliding-window-type: COUNT_BASED
+        sliding-window-size: 10
+        failure-rate-threshold: 50
+        slow-call-rate-threshold: 50
+        slow-call-duration-threshold: 2s
+        minimum-number-of-calls: 5
+        wait-duration-in-open-state: 10s
+        permitted-number-of-calls-in-half-open-state: 3
+        automatic-transition-from-open-to-half-open-enabled: true
+        record-exceptions:
+          - feign.FeignException
+          - java.io.IOException
+          - java.util.concurrent.TimeoutException
+        ignore-exceptions:
+          - java.lang.IllegalArgumentException
+          - com.microservices.order.resilience.ServiceUnavailableException
+
+  retry:
+    instances:
+      product-service:
+        max-attempts: 2
+        wait-duration: 200ms
+        retry-exceptions:
+          - feign.FeignException
+          - java.io.IOException
+        ignore-exceptions:
+          - java.lang.IllegalArgumentException
+
+      user-service:
+        max-attempts: 3
+        wait-duration: 500ms
+        retry-exceptions:
+          - feign.FeignException
+          - java.io.IOException
+        ignore-exceptions:
+          - java.lang.IllegalArgumentException
+
+  bulkhead:
+    instances:
+      product-service:
+        max-concurrent-calls: 10
+        max-wait-duration: 100ms
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health, info, metrics
+  endpoint:
+    health:
+      show-details: always
+  health:
+    circuitbreakers:
+      enabled: true
+    retryevents:
+      enabled: true
+
+springdoc:
+  swagger-ui:
+    path: /swagger-ui.html
+
+logging:
+  level:
+    com.microservices.order: DEBUG
+    io.github.resilience4j: DEBUG
